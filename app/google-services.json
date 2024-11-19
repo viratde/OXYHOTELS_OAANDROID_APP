@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "965731932289",
+    "project_id": "oxyhotels-30150",
+    "storage_bucket": "oxyhotels-30150.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965731932289:android:21b7ff16b07470be2b5580",
+        "android_client_info": {
+          "package_name": "com.oxyhotel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "965731932289-scu7s42nskas32p6pi5rctnl2vlv3sa5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-x2qNm6Ck10AuJsvpXVwuJmUlmCByCwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "965731932289-scu7s42nskas32p6pi5rctnl2vlv3sa5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:965731932289:android:f4fceb20cf14f3bc2b5580",
+        "android_client_info": {
+          "package_name": "com.oxyhotels"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "965731932289-scu7s42nskas32p6pi5rctnl2vlv3sa5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC-x2qNm6Ck10AuJsvpXVwuJmUlmCByCwo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "965731932289-scu7s42nskas32p6pi5rctnl2vlv3sa5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

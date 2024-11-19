@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Oxyhotels</string>
+
+    <string name="company_name">Oxy</string>
+    <string name="welcome_screen_main">Welcome to</string>
+    <string name="welcome_screen_normal">The best hotel booking app in this century to accompany your vacation.</string>
+
+    <string name="welcome_screen_first_text">Travel safely, comfortably, &amp; easily </string>
+    <string name="welcome_screen_first_support_text">Where every journey begins with peace of mind,and every stay is a delightful experience</string>
+    <string name="welcome_screen_second_text">Find the best hotels for your vacation</string>
+    <string name="welcome_screen_second_support_text">Find the best hotels for your vacation</string>
+    <string name="welcome_screen_third_text">Let’s discover the world with us</string>
+    <string name="welcome_screen_third_support_text">Join us on a captivating journey,as we unlock the wonders of the globe,and create unforgettable memories together.</string>
+    
+    <string name="web_client_id">1086830426801-iesam6oapg801fh649stdi0ssul3fc3b.apps.googleusercontent.com</string>
+</resources>
