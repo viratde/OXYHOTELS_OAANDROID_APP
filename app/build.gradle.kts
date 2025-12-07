@@ -15,8 +15,8 @@ android {
         applicationId = "com.oxyhotel"
         minSdk = 24
         targetSdk = 36
-        versionCode = 45
-        versionName = "1.1.0"
+        versionCode = 53
+        versionName = "3.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
