@@ -27,7 +27,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val authUseCases: AuthUseCases
+    private val authUseCases: AuthUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
 
@@ -100,12 +101,6 @@ class ProfileViewModel @Inject constructor(
             return
         }
 
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
         val jsonObject = JSONObject()
 
         try {

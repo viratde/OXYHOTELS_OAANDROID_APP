@@ -26,7 +26,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReviewViewModel @Inject constructor(
-    private val authUseCases: AuthUseCases
+    private val authUseCases: AuthUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(RatingState())
@@ -68,12 +69,6 @@ class ReviewViewModel @Inject constructor(
                 )
             }
             return
-        }
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
         }
 
         try {

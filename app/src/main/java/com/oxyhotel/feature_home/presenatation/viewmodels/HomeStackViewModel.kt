@@ -39,7 +39,8 @@ import javax.inject.Inject
 class HomeStackViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
     private val hotelUseCases: HotelUseCases,
-    private val locationUseCases: LocationUseCases
+    private val locationUseCases: LocationUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeStackState())
@@ -74,12 +75,6 @@ class HomeStackViewModel @Inject constructor(
     private suspend fun getRemoteHotels() {
 
         _state.value = state.value.copy(isRemoteHotelLoading = true)
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
 
         try {
             val token = authUseCases.getAuthData()?.authToken!!

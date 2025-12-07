@@ -38,7 +38,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authUseCases: AuthUseCases
+    private val authUseCases: AuthUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
 
@@ -51,12 +52,6 @@ class AuthViewModel @Inject constructor(
         val authData = authUseCases.getAuthData()
 
         if (authData?.authToken != null) {
-
-            val client = HttpClient(Android) {
-                install(ContentNegotiation) {
-                    json(contentType = ContentType("Text", "Plain"))
-                }
-            }
 
             val jsonObject = JSONObject()
             jsonObject.put("authToken", authData.authToken)
@@ -111,12 +106,6 @@ class AuthViewModel @Inject constructor(
                 )
             }
             return
-        }
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
         }
 
         try {
@@ -182,12 +171,6 @@ class AuthViewModel @Inject constructor(
                 )
             }
             return
-        }
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
         }
 
         try {
@@ -347,12 +330,6 @@ class AuthViewModel @Inject constructor(
 
         _state.update { AuthState(isAuthenticating = true) }
 
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
-
         try {
 
             val reqData = JSONObject()
@@ -487,13 +464,6 @@ class AuthViewModel @Inject constructor(
                 errorMessage = "Please Enter Correct dob"
             )
             return
-        }
-
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
         }
 
         try {

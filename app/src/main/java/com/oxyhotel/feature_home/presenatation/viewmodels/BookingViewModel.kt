@@ -33,7 +33,8 @@ import kotlin.math.ceil
 @HiltViewModel
 class BookingViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
-    private val bookingUseCases: BookingUseCases
+    private val bookingUseCases: BookingUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
     private val calendar: Calendar = Calendar.getInstance().also {
@@ -91,7 +92,7 @@ class BookingViewModel @Inject constructor(
             val guest = rooms[roomType]?.toMutableList()!!
             if (action < 0) {
                 if (guest.isNotEmpty()) {
-                    guest.removeLast()
+                    guest.removeAt(guest.lastIndex)
                 }
             } else {
                 guest.add(1)
@@ -199,13 +200,6 @@ class BookingViewModel @Inject constructor(
             isCalculating = true
         )
 
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
-
-
         try {
 
             val response = client.post("${Constant.domain}/api/checkStatus") {
@@ -252,13 +246,6 @@ class BookingViewModel @Inject constructor(
         _state.value = state.value.copy(
             isCalculating = true
         )
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
-
 
         try {
 

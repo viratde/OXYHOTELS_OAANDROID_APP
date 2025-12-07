@@ -32,7 +32,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AllBookingsViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
-    private val bookingUseCases: BookingUseCases
+    private val bookingUseCases: BookingUseCases,
+    private val client: HttpClient
 ) : ViewModel() {
 
     val options = listOf(
@@ -67,12 +68,6 @@ class AllBookingsViewModel @Inject constructor(
         _state.value = state.value.copy(
             isRemoteDataLoading = true
         )
-
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
 
         try {
             val token = authUseCases.getAuthData()?.authToken
@@ -136,11 +131,6 @@ class AllBookingsViewModel @Inject constructor(
             )
         }
 
-        val client = HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
-            }
-        }
         try {
 
             val token = authUseCases.getAuthData()?.authToken
