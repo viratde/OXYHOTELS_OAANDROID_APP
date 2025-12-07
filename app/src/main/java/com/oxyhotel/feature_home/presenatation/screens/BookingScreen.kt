@@ -103,7 +103,6 @@ fun BookingScreen(
             }
             calendar.timeInMillis
         },
-        yearRange = 2023..2024,
     )
     val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 

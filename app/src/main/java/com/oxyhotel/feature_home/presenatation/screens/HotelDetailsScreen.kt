@@ -49,7 +49,6 @@ fun HotelDetailsScreen(
                     images = hotelStorage.imageData.values.flatten().toMutableList()
                 )
 
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
