@@ -9,7 +9,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.gson.Gson
+import com.oxyhotel.common.network.EmailOrPhoneRequest
+import com.oxyhotel.common.network.GoogleCodeRequest
+import com.oxyhotel.common.network.SignUpRequest
+import com.oxyhotel.common.network.VerifyOtpRequest
+import com.oxyhotel.common.network.VerifyTokenRequest
 import com.oxyhotel.R
 import com.oxyhotel.constants.Constant
 import com.oxyhotel.feature_auth.domain.use_cases.AuthUseCases
@@ -20,26 +24,23 @@ import com.oxyhotel.feature_auth.presentation.auth.states.VerificationResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val json: Json
 ) : ViewModel() {
 
 
@@ -53,21 +54,16 @@ class AuthViewModel @Inject constructor(
 
         if (authData?.authToken != null) {
 
-            val jsonObject = JSONObject()
-            jsonObject.put("authToken", authData.authToken)
-            jsonObject.put("fToken", fToken)
-
             val response = client.post(Constant.verifyTokenRoute) {
-                headers {
-                    append("Content-Type", "application/json")
-                }
-                setBody(jsonObject.toString())
-            }.body<String>()
+                setBody(
+                    VerifyTokenRequest(
+                        authToken = authData.authToken,
+                        fToken = fToken
+                    )
+                )
+            }.body<AuthResponse>()
 
-
-            val rData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!rData.status) {
+            if (!response.status) {
                 _state.update {
                     state.value.copy(
                         isError = true,
@@ -80,7 +76,7 @@ class AuthViewModel @Inject constructor(
             _state.update {
                 state.value.copy(
                     isAuthenticated = true,
-                    isUpdateRequired = Constant.currentVersion != rData.data
+                    isUpdateRequired = Constant.currentVersion != response.data && !response.isANewVersionInReview
                 )
             }
         }
@@ -110,23 +106,15 @@ class AuthViewModel @Inject constructor(
 
         try {
 
-            val reqData = JSONObject()
-            reqData.put("data", email)
-
             val response = client.post(Constant.getOtpOnEmailOrPhone) {
-                headers {
-                    append("Content-Type", "application/json")
-                }
-                setBody(reqData.toString())
-            }.body<String>()
+                setBody(EmailOrPhoneRequest(email))
+            }.body<AuthResponse>()
 
-            val respData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!respData.status) {
+            if (!response.status) {
                 _state.update {
                     state.value.copy(
                         isError = true,
-                        errorMessage = respData.message,
+                        errorMessage = response.message,
                         isAuthenticating = false
                     )
                 }
@@ -138,7 +126,7 @@ class AuthViewModel @Inject constructor(
                     isOtpSent = true,
                     isAuthenticating = false,
                     otpSentEmail = email,
-                    otpToken = respData.data
+                    otpToken = response.data
                 )
             }
         } catch (err: Exception) {
@@ -175,31 +163,37 @@ class AuthViewModel @Inject constructor(
 
         try {
 
-            val reqData = JSONObject()
-            reqData.put("otp", otp)
-            reqData.put("verifyToken", state.value.otpToken)
-
             val response = client.post(Constant.verifyOtpRoute) {
-                headers {
-                    append("Content-Type", "application/json")
-                }
-                setBody(reqData.toString())
-            }.body<String>()
+                setBody(
+                    VerifyOtpRequest(
+                        otp = otp,
+                        verifyToken = state.value.otpToken
+                    )
+                )
+            }.body<AuthResponse>()
 
-            val respData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!respData.status) {
+            if (!response.status) {
                 _state.update {
                     state.value.copy(
                         isError = true,
-                        errorMessage = respData.message,
+                        errorMessage = response.message,
                         isAuthenticating = false
                     )
                 }
                 return
             }
 
-            val parseData = Gson().fromJson(respData.data, VerificationResponse::class.java)
+            val parseData = response.data?.let { json.decodeFromString<VerificationResponse>(it) }
+                ?: run {
+                    _state.update {
+                        state.value.copy(
+                            isError = true,
+                            errorMessage = "Please try after some time",
+                            isAuthenticating = false
+                        )
+                    }
+                    return
+                }
             if (parseData.verifiedToken != null) {
                 _state.value = state.value.copy(
                     isAuthenticating = false,
@@ -332,30 +326,32 @@ class AuthViewModel @Inject constructor(
 
         try {
 
-            val reqData = JSONObject()
-            reqData.put("code", code)
-
             val response = client.post(Constant.verifyGoogleCodeRoute) {
-                headers {
-                    append("Content-Type", "application/json")
-                }
-                setBody(reqData.toString())
-            }.body<String>()
+                setBody(GoogleCodeRequest(code))
+            }.body<AuthResponse>()
 
-            val respData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!respData.status) {
+            if (!response.status) {
                 _state.update {
                     state.value.copy(
                         isError = true,
-                        errorMessage = respData.message,
+                        errorMessage = response.message,
                         isAuthenticating = false
                     )
                 }
                 return
             }
 
-            val parseData = Gson().fromJson(respData.data, VerificationResponse::class.java)
+            val parseData = response.data?.let { json.decodeFromString<VerificationResponse>(it) }
+                ?: run {
+                    _state.update {
+                        state.value.copy(
+                            isError = true,
+                            errorMessage = "Please try after some time",
+                            isAuthenticating = false
+                        )
+                    }
+                    return
+                }
 
             if (parseData.verifiedToken != null) {
                 _state.value = state.value.copy(
@@ -468,34 +464,40 @@ class AuthViewModel @Inject constructor(
 
         try {
 
-            val reqData = JSONObject()
-            reqData.put("name", name)
-            reqData.put("email", email)
-            reqData.put("phone", phone)
-            reqData.put("dob", dob)
-            reqData.put("verifiedToken", verifiedToken)
-
             val response = client.post(Constant.createAccountRoute) {
-                headers {
-                    append("Content-Type", "application/json")
-                }
-                setBody(reqData.toString())
-            }.body<String>()
+                setBody(
+                    SignUpRequest(
+                        name = name,
+                        email = email,
+                        phone = phone,
+                        dob = dob,
+                        verifiedToken = verifiedToken
+                    )
+                )
+            }.body<AuthResponse>()
 
-            val respData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!respData.status) {
+            if (!response.status) {
                 _state.update {
                     state.value.copy(
                         isError = true,
-                        errorMessage = respData.message,
+                        errorMessage = response.message,
                         isAuthenticating = false
                     )
                 }
                 return
             }
 
-            val parseData = Gson().fromJson(respData.data, SignupResponse::class.java)
+            val parseData = response.data?.let { json.decodeFromString<SignupResponse>(it) }
+                ?: run {
+                    _state.update {
+                        state.value.copy(
+                            isError = true,
+                            errorMessage = "Please try after some time",
+                            isAuthenticating = false
+                        )
+                    }
+                    return
+                }
             authUseCases.setAuthData(parseData)
             _state.value = state.value.copy(
                 isAuthenticating = false,

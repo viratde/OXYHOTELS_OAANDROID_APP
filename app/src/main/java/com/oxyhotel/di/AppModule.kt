@@ -39,8 +39,11 @@ import dagger.hilt.components.SingletonComponent
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.android.Android
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
 import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 
 
@@ -57,10 +60,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesAuthUseCases(authSharedPreferences: SharedPreferences): AuthUseCases {
+    fun providesAuthUseCases(
+        authSharedPreferences: SharedPreferences,
+        json: Json
+    ): AuthUseCases {
 
         val authDataRepository = AuthDataRepositoryImpl(
-            sharedPreferences = authSharedPreferences
+            sharedPreferences = authSharedPreferences,
+            json = json
         )
 
         return AuthUseCases(
@@ -139,10 +146,20 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun providesHttpClient(): HttpClient {
+    fun providesJson(): Json = Json {
+        ignoreUnknownKeys = true
+        explicitNulls = false
+    }
+
+    @Provides
+    @Singleton
+    fun providesHttpClient(json: Json): HttpClient {
         return HttpClient(Android) {
             install(ContentNegotiation) {
-                json(contentType = ContentType("Text", "Plain"))
+                json(json = json, contentType = ContentType.Any)
+            }
+            defaultRequest {
+                contentType(ContentType.Application.Json)
             }
         }
     }

@@ -2,8 +2,6 @@ package com.oxyhotel.feature_home.presenatation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import com.oxyhotel.constants.Constant
 import com.oxyhotel.feature_auth.domain.use_cases.AuthUseCases
 import com.oxyhotel.feature_auth.presentation.auth.states.AuthResponse
@@ -19,12 +17,8 @@ import com.oxyhotel.feature_home.presenatation.utils.distanceBetweenLocations
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -32,6 +26,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
 
@@ -40,7 +36,8 @@ class HomeStackViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
     private val hotelUseCases: HotelUseCases,
     private val locationUseCases: LocationUseCases,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val json: Json
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeStackState())
@@ -81,29 +78,31 @@ class HomeStackViewModel @Inject constructor(
 
             val response = client.post(Constant.getHotelRoute) {
                 headers {
-                    append("Content-Type", "application/json")
                     append("Authorization", "Bearer $token")
                 }
-            }.body<String>()
+            }.body<AuthResponse>()
 
-            val rData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!rData.status) {
+            if (!response.status) {
                 _state.value = state.value.copy(
-                    isRemoteHotelLoading = false, isError = true, errorMessage = rData.message
+                    isRemoteHotelLoading = false, isError = true, errorMessage = response.message
                 )
                 return
             }
 
 
-            val typeToken = object : TypeToken<HotelAndLocationData>() {}.type
-            val serverHotels = Gson().fromJson<HotelAndLocationData>(rData.data, typeToken)
+            val serverHotels = response.data?.let { json.decodeFromString<HotelAndLocationData>(it) }
+                ?: run {
+                    _state.value = state.value.copy(
+                        isRemoteHotelLoading = false,
+                        isError = true,
+                        errorMessage = "Unable to parse hotels response."
+                    )
+                    return
+                }
             withContext(Dispatchers.IO) {
                 hotelUseCases.clearHotels()
                 locationUseCases.addLocationsUseCases(serverHotels.locations)
-                if (serverHotels != null) {
-                    hotelUseCases.addHotels(serverHotels.hotels)
-                }
+                hotelUseCases.addHotels(serverHotels.hotels)
             }
 
             _state.value = state.value.copy(

@@ -9,7 +9,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
-import com.google.gson.Gson
 import com.oxyhotel.MainActivity
 import com.oxyhotel.OxyApplication
 import com.oxyhotel.R
@@ -21,6 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Locale
 import javax.inject.Inject
@@ -33,6 +34,8 @@ class MessagingService : FirebaseMessagingService(
 
     @Inject
     lateinit var bookingUseCases: BookingUseCases
+    @Inject
+    lateinit var json: Json
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.IO + job)
@@ -52,7 +55,7 @@ class MessagingService : FirebaseMessagingService(
             val data = message.data["booking"]
             if (data != null) {
                 try {
-                    val bookingModel = Gson().fromJson(data, BookingStorage::class.java)
+                    val bookingModel = json.decodeFromString<BookingStorage>(data)
                     postBookingUpdate(
                         Event(
                             bookingModel = bookingModel,

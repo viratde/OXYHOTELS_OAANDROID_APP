@@ -2,7 +2,7 @@ package com.oxyhotel.feature_home.presenatation.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.gson.Gson
+import com.oxyhotel.common.network.ProfileUpdateRequest
 import com.oxyhotel.constants.Constant
 import com.oxyhotel.feature_auth.domain.use_cases.AuthUseCases
 import com.oxyhotel.feature_auth.presentation.auth.states.AuthResponse
@@ -11,18 +11,13 @@ import com.oxyhotel.feature_home.presenatation.states.ProfileState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 import javax.inject.Inject
 
 @HiltViewModel
@@ -101,30 +96,26 @@ class ProfileViewModel @Inject constructor(
             return
         }
 
-        val jsonObject = JSONObject()
-
         try {
-
-            jsonObject.put("name", name)
-            jsonObject.put("email", email)
-            jsonObject.put("phone", phone)
-            jsonObject.put("dob", dob)
-
             val response = client.post(Constant.updateProfileRoute) {
                 headers {
-                    append("Content-Type", "application/json")
                     append("Authorization", "Bearer ${state.value.userData?.authToken}")
                 }
-                setBody(jsonObject.toString())
-            }.body<String>()
+                setBody(
+                    ProfileUpdateRequest(
+                        name = name,
+                        email = email,
+                        phone = phone,
+                        dob = dob
+                    )
+                )
+            }.body<AuthResponse>()
 
-            val rData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!rData.status) {
+            if (!response.status) {
                 _state.value = state.value.copy(
                     isLoading = false,
                     isError = true,
-                    errorMessage = rData.message
+                    errorMessage = response.message
                 )
                 return
             }

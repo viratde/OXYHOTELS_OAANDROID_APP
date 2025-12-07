@@ -1,7 +1,6 @@
 package com.oxyhotel.feature_home.presenatation.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.google.gson.Gson
 import com.oxyhotel.constants.Constant
 import com.oxyhotel.feature_auth.domain.use_cases.AuthUseCases
 import com.oxyhotel.feature_auth.presentation.auth.states.AuthResponse
@@ -12,16 +11,14 @@ import com.oxyhotel.feature_home.presenatation.states.BookingState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.android.Android
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.ContentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -34,7 +31,8 @@ import kotlin.math.ceil
 class BookingViewModel @Inject constructor(
     private val authUseCases: AuthUseCases,
     private val bookingUseCases: BookingUseCases,
-    private val client: HttpClient
+    private val client: HttpClient,
+    private val json: Json
 ) : ViewModel() {
 
     private val calendar: Calendar = Calendar.getInstance().also {
@@ -114,9 +112,9 @@ class BookingViewModel @Inject constructor(
         return aDates.sumOf { date ->
             rooms.keys.toList().sumOf { roomType ->
                 rooms[roomType]?.sumOf { guests ->
-                    val value = hotel.prices[roomType]?.get(date)
-                        ?.get("pax${if (guests <= 3) guests else 3}Price") ?: hotel.maxPrice
-                    value.toInt()
+                    val price = hotel.prices[roomType]?.get(date)
+                        ?.get("pax${if (guests <= 3) guests else 3}Price") ?: hotel.maxPrice.toDouble()
+                    price.toInt()
                 } ?: 0
             }
         }
@@ -203,28 +201,21 @@ class BookingViewModel @Inject constructor(
         try {
 
             val response = client.post("${Constant.domain}/api/checkStatus") {
-                headers {
-                    append("Content-Type", "application/json")
-                }
                 parameter("hotelId", hotelId)
-                setBody(Gson().toJson(state.value))
-            }.body<String>()
+                setBody(state.value)
+            }.body<AuthResponse>()
 
-            client.close()
-
-            val rData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!rData.status) {
+            if (!response.status) {
                 _state.value = state.value.copy(
                     isCalculating = false,
                     isError = true,
-                    errorMessage = rData.message
+                    errorMessage = response.message
                 )
             }
 
             _state.value = state.value.copy(
                 isCalculating = false,
-                amount = rData.data?.toIntOrNull()
+                amount = response.data?.toIntOrNull()
             )
         } catch (err: Exception) {
             _state.value = state.value.copy(
@@ -252,26 +243,24 @@ class BookingViewModel @Inject constructor(
             val token = authUseCases.getAuthData()?.authToken
             val response = client.post(Constant.createBookingRoute) {
                 headers {
-                    append("Content-Type", "application/json")
                     append("Authorization", "Bearer $token")
                 }
                 parameter("hotelId", hotelId)
-                setBody(Gson().toJson(state.value))
-            }.body<String>()
+                setBody(state.value)
+            }.body<AuthResponse>()
 
 
-            val rData = Gson().fromJson(response, AuthResponse::class.java)
-
-            if (!rData.status) {
+            if (!response.status) {
                 _state.value = state.value.copy(
                     isCalculating = false,
                     isError = true,
-                    errorMessage = rData.message
+                    errorMessage = response.message
                 )
                 return
             }
 
-            val serverBooking = Gson().fromJson(rData.data, BookingStorage::class.java)
+            val serverBooking = response.data?.let { json.decodeFromString<BookingStorage>(it) }
+                ?: throw IllegalStateException("Missing booking data from server")
             bookingUseCases.addBooking(serverBooking)
             _state.value = state.value.copy(
                 isCalculating = false,
