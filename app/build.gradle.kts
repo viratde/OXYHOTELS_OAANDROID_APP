@@ -4,16 +4,17 @@ plugins {
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.composeCompiler)
 }
 
 android {
     namespace = "com.oxyhotel"
-    compileSdk = 33
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.oxyhotel"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 36
         versionCode = 45
         versionName = "1.1.0"
 
@@ -64,6 +65,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.firebase.messaging)
+    implementation(libs.material.icons.extended)
     testImplementation(libs.junit4)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)

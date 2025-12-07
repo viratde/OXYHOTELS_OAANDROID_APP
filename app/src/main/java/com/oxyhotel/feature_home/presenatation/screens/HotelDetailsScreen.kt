@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -46,9 +47,14 @@ fun HotelDetailsScreen(
 
             item {
                 HotelDetailSImageSwiper(
-                    images = hotelStorage.imageData.values.flatten().toMutableList()
+                    images = hotelStorage.imageData.values.flatten().toList(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
                 )
+            }
 
+            item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

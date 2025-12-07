@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePickerFormatter
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import com.oxyhotel.R
@@ -60,7 +61,7 @@ fun BookingScreen(
     bookingViewModel: BookingViewModel,
 ) {
 
-    val life = LocalLifecycleOwner.current
+    val life = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val currentTimeInMillis = remember {
         val calendar = Calendar.getInstance().apply {
@@ -103,6 +104,17 @@ fun BookingScreen(
             }
             calendar.timeInMillis
         },
+        selectableDates = object : SelectableDates {
+
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                return utcTimeMillis > currentTimeInMillis
+            }
+
+            override fun isSelectableYear(year: Int): Boolean {
+                return true
+            }
+
+        }
     )
     val dateFormat = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
 
@@ -132,10 +144,6 @@ fun BookingScreen(
                 headline = {},
                 showModeToggle = false,
                 title = {},
-                dateValidator = {
-                    return@DateRangePicker it > currentTimeInMillis
-                },
-                dateFormatter = DatePickerFormatter("yy MMM dd", "yy MMM dd", "yy MMM dd"),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp, vertical = 20.dp)
