@@ -19,6 +19,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -114,7 +115,7 @@ class HomeStackViewModel @Inject constructor(
 
             return
         } catch (err: Exception) {
-            err.printStackTrace()
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 isRemoteHotelLoading = false,
                 isError = true,

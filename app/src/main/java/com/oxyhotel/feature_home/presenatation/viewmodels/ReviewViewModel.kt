@@ -15,6 +15,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
@@ -111,6 +112,7 @@ class ReviewViewModel @Inject constructor(
                 )
             }
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.update {
                 state.value.copy(
                     isError = true,

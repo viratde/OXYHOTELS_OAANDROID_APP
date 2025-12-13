@@ -21,7 +21,8 @@ import com.oxyhotel.feature_home.presenatation.viewmodels.HomeStackViewModel
 import com.oxyhotel.feature_home.presenatation.viewmodels.ProfileViewModel
 import com.oxyhotel.ui.theme.OxyhotelsTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
                     LaunchedEffect(key1 = token) {
                         if (token.isNotEmpty() && isLoaded) {
-                            runBlocking {
+                            withContext(Dispatchers.IO) {
                                 authViewModel.firstTimeGetAuth(token)
                             }
                         } else {

@@ -16,12 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.oxyhotel.common.composables.Screen
-
 import com.oxyhotel.feature_home.presenatation.HotelDetailsRoute
 import com.oxyhotel.feature_home.presenatation.composables.HeaderWithBackButton
 import com.oxyhotel.feature_home.presenatation.composables.HotelWishShow
 import com.oxyhotel.feature_home.presenatation.viewmodels.HomeStackViewModel
-import kotlin.math.ceil
 
 @Composable
 fun WishlistHotelScreen(
@@ -71,41 +69,40 @@ fun WishlistHotelScreen(
 
         }
 
-        for (i in 0 until ceil(wishlistHotels.size.toFloat() / 2.0f).toInt()) {
+        wishlistHotels.chunked(2).forEach {
+            val first = it.getOrNull(0)
+            val second = it.getOrNull(1)
             Row(modifier = Modifier.fillMaxWidth()) {
-
-                val it = wishlistHotels[i * 2]
-                HotelWishShow(
-                    hotelName = it.hotelName,
-                    hotelAddress = it.hotelAddress,
-                    hotelPrice = it.minPrice,
-                    hotelRating = it.reviews.sumOf { it.ratingLevel } / it.reviews.size,
-                    hotelNoOfRatings = it.reviews.size,
-                    hotelImageUri = it.imageData[it.imageData.keys.toMutableList()[0]]?.get(0)
-                        ?: "",
-                    isWishlist = it.isWishlist,
-                    onWishlist = { value ->
-                        homeStackViewModel.updateBookMark(it._id, value)
-                    }
-                ) {
-                    navController.navigate("${HotelDetailsRoute.route}/id=${it._id}")
-                }
-                if ((i * 2) + 1 < wishlistHotels.size) {
-                    val it = wishlistHotels[(i * 2) + 1]
+                first?.let { hotel ->
                     HotelWishShow(
-                        hotelName = it.hotelName,
-                        hotelAddress = it.hotelAddress,
-                        hotelPrice = it.minPrice,
-                        hotelRating = it.rating,
-                        hotelNoOfRatings = it.noOfRatings,
-                        hotelImageUri = it.imageData[it.imageData.keys.toMutableList()[0]]?.get(0)
-                            ?: "",
-                        isWishlist = it.isWishlist,
+                        hotelName = hotel.hotelName,
+                        hotelAddress = hotel.hotelAddress,
+                        hotelPrice = hotel.minPrice,
+                        hotelRating = hotel.rating,
+                        hotelNoOfRatings = hotel.noOfRatings,
+                        hotelImageUri = hotel.imageData.values.flatten().firstOrNull() ?: "",
+                        isWishlist = hotel.isWishlist,
                         onWishlist = { value ->
-                            homeStackViewModel.updateBookMark(it._id, value)
+                            homeStackViewModel.updateBookMark(hotel._id, value)
                         }
                     ) {
-                        navController.navigate("${HotelDetailsRoute.route}/id=${it._id}")
+                        navController.navigate("${HotelDetailsRoute.route}/id=${hotel._id}")
+                    }
+                }
+                second?.let { hotel ->
+                    HotelWishShow(
+                        hotelName = hotel.hotelName,
+                        hotelAddress = hotel.hotelAddress,
+                        hotelPrice = hotel.minPrice,
+                        hotelRating = hotel.rating,
+                        hotelNoOfRatings = hotel.noOfRatings,
+                        hotelImageUri = hotel.imageData.values.flatten().firstOrNull() ?: "",
+                        isWishlist = hotel.isWishlist,
+                        onWishlist = { value ->
+                            homeStackViewModel.updateBookMark(hotel._id, value)
+                        }
+                    ) {
+                        navController.navigate("${HotelDetailsRoute.route}/id=${hotel._id}")
                     }
                 }
             }

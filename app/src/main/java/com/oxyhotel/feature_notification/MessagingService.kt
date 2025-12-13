@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -28,12 +27,11 @@ import javax.inject.Inject
 
 
 @AndroidEntryPoint
-class MessagingService : FirebaseMessagingService(
-
-) {
+class MessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var bookingUseCases: BookingUseCases
+
     @Inject
     lateinit var json: Json
 

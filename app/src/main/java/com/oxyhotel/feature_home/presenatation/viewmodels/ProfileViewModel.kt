@@ -14,6 +14,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -142,7 +143,7 @@ class ProfileViewModel @Inject constructor(
             )
 
         } catch (err: Exception) {
-            err.printStackTrace()
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 isLoading = false,
                 isError = true,

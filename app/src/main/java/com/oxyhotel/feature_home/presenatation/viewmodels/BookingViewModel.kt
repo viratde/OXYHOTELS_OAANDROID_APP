@@ -15,6 +15,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.serialization.decodeFromString
@@ -218,6 +219,7 @@ class BookingViewModel @Inject constructor(
                 amount = response.data?.toIntOrNull()
             )
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 isCalculating = false,
                 isError = true,
@@ -268,6 +270,7 @@ class BookingViewModel @Inject constructor(
                 errorMessage = "Booking Created Successfully"
             )
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 isCalculating = false,
                 isError = true,

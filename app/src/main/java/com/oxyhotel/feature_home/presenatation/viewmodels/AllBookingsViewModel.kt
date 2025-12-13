@@ -14,6 +14,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.headers
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -98,7 +99,7 @@ class AllBookingsViewModel @Inject constructor(
             )
 
         } catch (err: Exception) {
-            err.printStackTrace()
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 isRemoteDataLoading = false,
                 isError = true,
@@ -158,6 +159,7 @@ class AllBookingsViewModel @Inject constructor(
             )
 
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.value = state.value.copy(
                 cancellingId = null,
                 isError = true,

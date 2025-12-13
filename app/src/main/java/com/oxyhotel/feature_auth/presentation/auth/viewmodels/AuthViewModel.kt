@@ -9,12 +9,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.oxyhotel.R
 import com.oxyhotel.common.network.EmailOrPhoneRequest
 import com.oxyhotel.common.network.GoogleCodeRequest
 import com.oxyhotel.common.network.SignUpRequest
 import com.oxyhotel.common.network.VerifyOtpRequest
 import com.oxyhotel.common.network.VerifyTokenRequest
-import com.oxyhotel.R
 import com.oxyhotel.constants.Constant
 import com.oxyhotel.feature_auth.domain.use_cases.AuthUseCases
 import com.oxyhotel.feature_auth.presentation.auth.states.AuthResponse
@@ -26,12 +26,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
 
@@ -54,16 +54,34 @@ class AuthViewModel @Inject constructor(
 
         if (authData?.authToken != null) {
 
-            val response = client.post(Constant.verifyTokenRoute) {
-                setBody(
-                    VerifyTokenRequest(
-                        authToken = authData.authToken,
-                        fToken = fToken
+            try {
+                val response = client.post(Constant.verifyTokenRoute) {
+                    setBody(
+                        VerifyTokenRequest(
+                            authToken = authData.authToken,
+                            fToken = fToken
+                        )
                     )
-                )
-            }.body<AuthResponse>()
+                }.body<AuthResponse>()
 
-            if (!response.status) {
+                if (!response.status) {
+                    _state.update {
+                        state.value.copy(
+                            isError = true,
+                            errorMessage = "Please try after some time.",
+                            isAuthenticated = false,
+                        )
+                    }
+                    return
+                }
+                _state.update {
+                    state.value.copy(
+                        isAuthenticated = true,
+                        isUpdateRequired = Constant.currentVersion != response.data && !response.isANewVersionInReview
+                    )
+                }
+            } catch (err: Exception) {
+                if (err is CancellationException) throw err
                 _state.update {
                     state.value.copy(
                         isError = true,
@@ -73,18 +91,7 @@ class AuthViewModel @Inject constructor(
                 }
                 return
             }
-            _state.update {
-                state.value.copy(
-                    isAuthenticated = true,
-                    isUpdateRequired = Constant.currentVersion != response.data && !response.isANewVersionInReview
-                )
-            }
         }
-    }
-
-
-    suspend fun checkTokenAndSetToken(token: String) {
-
     }
 
     suspend fun sendOtpOnEmailOrPhone(
@@ -130,6 +137,7 @@ class AuthViewModel @Inject constructor(
                 )
             }
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.update {
                 state.value.copy(
                     isError = true,
@@ -227,6 +235,7 @@ class AuthViewModel @Inject constructor(
             _state.value =
                 state.value.copy(isOtpSent = true, isAuthenticating = false, isAuthenticated = true)
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             _state.update {
                 state.value.copy(
                     isError = true,
@@ -389,6 +398,7 @@ class AuthViewModel @Inject constructor(
                     isAuthenticated = false
                 )
         } catch (err: Exception) {
+            if (err is CancellationException) throw err
             println("error is $err")
             _state.update {
                 state.value.copy(
