@@ -4,7 +4,7 @@ object Constant {
     const val domain = "https://api.oxyhotels.com"
 
 
-    const val currentVersion = "3.0.2"
+    const val currentVersion = "3.0.3"
 
 
     const val getOtpOnEmailOrPhone = "$domain/auth"
